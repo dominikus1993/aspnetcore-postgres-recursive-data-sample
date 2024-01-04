@@ -17,11 +17,56 @@ internal sealed class PostgresCategoriesRepository : ICategoriesRepository
 
     public async Task<Category?> GetCategoryAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var categoryQ = _dbContext.Categories
+        var category = await _dbContext.Categories.AsNoTracking()
             .Include(x => x.SubCategories)
-            .Where(x => x.Id == id);
+            .Select(x =>
+                new Category()
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    SubCategories = x.SubCategories.Select(c => new Category()
+                    {
+                        Id = c.Id, Name = c.Name, SubCategories = c.SubCategories, ParentCategory = null
+                    }).ToList(), ParentCategory = null
+                })
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
-        return await categoryQ.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);;
+        if (category?.SubCategories is { Count: > 0 })
+        {
+            await LoadSubCategories(category.SubCategories, 3);
+        }
+
+        return category;
+    }
+
+    private async Task LoadSubCategories(List<Category> categories, int depth)
+    {
+        if (depth <= 0)
+            return;
+
+        foreach (var category in categories)
+        {
+            category.SubCategories = await _dbContext.Categories
+                .AsNoTracking()
+                .Where(c => c.ParentCategory!.Id == category.Id)
+                .Select(x =>
+                    new Category()
+                    {
+                        Id = x.Id,
+                        Name = x.Name,
+                        SubCategories = x.SubCategories.Select(c => new Category()
+                        {
+                            Id = c.Id, Name = c.Name, SubCategories = c.SubCategories, ParentCategory = null
+                        }).ToList(),
+                        ParentCategory = null
+                    })
+                .ToListAsync();
+
+            if (category.SubCategories is { Count: > 0 })
+            {
+                await LoadSubCategories(category.SubCategories, depth - 1);
+            }
+        }
     }
 
     public async Task AddCategoryAsync(Category category, CancellationToken cancellationToken = default)

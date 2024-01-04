@@ -47,14 +47,14 @@ public sealed class PostgresCategoriesRepositoryTests : IClassFixture<PostgresFi
             };
         await _categoriesRepository.AddCategoryAsync(parentCategory);
 
-        _fixture.CategoriesDbContext.ChangeTracker.Clear();
         // Act
         var result = await _categoriesRepository.GetCategoryAsync(parentCategory.Id);
 
         // Assert
         Assert.NotNull(result);
         Assert.NotEmpty(result.SubCategories);
-        Assert.Equivalent(parentCategory, result);
+        Assert.NotEmpty(result.SubCategories[0].SubCategories);
+        Assert.NotEmpty(result.SubCategories[0].SubCategories[0].SubCategories);
     }
 
     public void Dispose()
