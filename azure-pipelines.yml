@@ -1,0 +1,38 @@
+resources:
+  repositories:
+  - repository: self
+    trigger:
+      branches:
+        include:
+        - main
+        - release/v*
+  - repository: templates
+    name: rossmannpl-devops-yaml-templates
+    type: git
+  - repository: pro-fra-aws-tasks-definition
+    name: Grupa Projektów SRI/pro-fra-aws-tasks-definition
+    type: git
+  - repository: aws-templates
+    name: AWS Public Cloud/rossmannpl-devops-pipeline-templates
+    type: git
+
+variables:
+ - name: dockerArgs
+   value: --build-arg ROSSMANN_BUILD_ID=$(buildId)
+
+stages:
+- stage: ci
+  variables:
+    DOCKER_BUILDKIT: 1
+    isPullRequest: $[ eq(variables['Build.Reason'], 'PullRequest') ]
+  jobs:
+  - template: microservices/jobs/docker-ci.yml@templates
+    parameters:
+      name: ci_build_docker_iamge
+      dockerArgs: ${{ variables.dockerArgs }}
+      dockerfile: ./src/Sample.Api/Dockerfile
+      image: rossmannpl/xd
+      tag: $(Build.SourceBranchName)
+      auto_dd_version: true
+      artifactsAuthorize: nuget
+
