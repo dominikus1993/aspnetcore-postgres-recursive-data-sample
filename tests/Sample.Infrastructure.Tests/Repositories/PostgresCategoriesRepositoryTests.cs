@@ -15,7 +15,7 @@ public sealed class PostgresCategoriesRepositoryTests : IClassFixture<PostgresFi
         _fixture = fixture;
         _categoriesRepository = new PostgresCategoriesRepository(_fixture.CategoriesDbContext);
     }
-    
+
 
     [Fact]
     public async Task ShouldGetAllChildrenCategories()
@@ -33,12 +33,21 @@ public sealed class PostgresCategoriesRepositoryTests : IClassFixture<PostgresFi
                         Name = "Child1",
                         Id = Guid.NewGuid(),
                         SubCategories =
-                            [new Category() { Id = Guid.NewGuid(), Name = "Child2", SubCategories = [] }]
+                        [
+                            new Category()
+                            {
+                                Id = Guid.NewGuid(),
+                                Name = "Child2",
+                                SubCategories =
+                                    [new Category() { Id = Guid.NewGuid(), Name = "Child3", SubCategories = [] }]
+                            }
+                        ]
                     }
                 ]
             };
         await _categoriesRepository.AddCategoryAsync(parentCategory);
 
+        _fixture.CategoriesDbContext.ChangeTracker.Clear();
         // Act
         var result = await _categoriesRepository.GetCategoryAsync(parentCategory.Id);
 

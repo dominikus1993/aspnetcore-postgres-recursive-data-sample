@@ -17,11 +17,11 @@ internal sealed class PostgresCategoriesRepository : ICategoriesRepository
 
     public async Task<Category?> GetCategoryAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var category = await _dbContext.Categories
+        var categoryQ = _dbContext.Categories
             .Include(x => x.SubCategories)
-            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+            .Where(x => x.Id == id);
 
-        return category;
+        return await categoryQ.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);;
     }
 
     public async Task AddCategoryAsync(Category category, CancellationToken cancellationToken = default)

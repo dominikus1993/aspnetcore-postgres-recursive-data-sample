@@ -43,8 +43,8 @@ public sealed class PostgresFixture : IAsyncLifetime
     
     public void ClearDatabaseAsync()
     {
-        CategoriesDbContext.Database.EnsureDeleted();
-        CategoriesDbContext.Database.Migrate();
+        CategoriesDbContext.Categories.RemoveRange(CategoriesDbContext.Categories);
+        CategoriesDbContext.SaveChanges();
     }
     
     public async Task DisposeAsync()

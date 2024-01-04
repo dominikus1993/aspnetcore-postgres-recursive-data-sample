@@ -19,7 +19,7 @@ internal sealed class CategoriesDbContext : DbContext
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Id).ValueGeneratedNever();
             entity.Property(x => x.Name).HasMaxLength(200);
-            entity.HasMany(x => x.SubCategories).WithOne().HasForeignKey(x => x.Id);
+            entity.HasMany(x => x.SubCategories).WithOne(x => x.ParentCategory);
         });
         base.OnModelCreating(modelBuilder);
     }
